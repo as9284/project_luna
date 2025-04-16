@@ -4,9 +4,16 @@ import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:project_luna/views/home.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isAndroid) {
+    WebViewPlatform.instance = AndroidWebViewPlatform();
+  }
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -29,7 +36,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.cyan,
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
       ),
       routes: {'/home': (context) => const HomePage()},
