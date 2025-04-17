@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "project_luna" "\0"
+            VALUE "CompanyName", "AS" "\0"
+            VALUE "FileDescription", "Luna" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "project_luna" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "project_luna.exe" "\0"
-            VALUE "ProductName", "project_luna" "\0"
+            VALUE "InternalName", "Luna" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 AS. All rights reserved." "\0"
+            VALUE "OriginalFilename", "luna.exe" "\0"
+            VALUE "ProductName", "Luna" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
