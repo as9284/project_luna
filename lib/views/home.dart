@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:intl/intl.dart';
 import 'package:project_luna/views/article_page.dart';
-import 'package:project_luna/views/settings_page.dart'; // NEW
+import 'package:project_luna/views/settings_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(
