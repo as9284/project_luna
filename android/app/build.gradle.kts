@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.as.project_luna"
+    namespace = "com.example.project_luna"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
