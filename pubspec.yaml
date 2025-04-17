@@ -1,7 +1,7 @@
-name: project_luna
-description: "A new Flutter project."
+name: luna
+description: "Minimalistic news app powered by The Guardian API"
 publish_to: "none"
-version: 0.1.0
+version: 1.0.0
 
 environment:
   sdk: ^3.7.2
@@ -18,7 +18,8 @@ dependencies:
   url_launcher: ^6.3.1
   webview_flutter: ^4.10.0
   webview_flutter_android: ^4.3.5
-  webview_flutter_wkwebview: ^3.18.6
+  shared_preferences: ^2.5.3
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+msix_config:
+  display_name: Luna
+  publisher_display_name: AS
+  identity_name: com.as.project-luna
+  msix_version: 1.0.0.0
+  logo_path: windows/runner/resources/app_icon.ico
