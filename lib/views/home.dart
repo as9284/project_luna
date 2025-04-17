@@ -150,7 +150,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(pageTitle),
+        title: Text(pageTitle, style: TextStyle(fontWeight: FontWeight.w600)),
         leading: Builder(
           builder: (context) {
             return IconButton(
