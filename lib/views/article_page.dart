@@ -65,7 +65,12 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     // For non-Android platforms, show a loading screen until the external browser is launched
     if (!Platform.isAndroid) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Luna")),
+        appBar: AppBar(
+          title: const Text(
+            "Go back",
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
