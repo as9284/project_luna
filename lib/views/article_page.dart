@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:html/dom.dart' as dom;
 
 class ArticleDetailPage extends StatelessWidget {
   final Map articleContent;
@@ -14,6 +16,15 @@ class ArticleDetailPage extends StatelessWidget {
       return DateFormat('MMM d, y - h:mm a').format(parsed);
     } catch (_) {
       return rawDate;
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch $url';
     }
   }
 
@@ -50,7 +61,26 @@ class ArticleDetailPage extends StatelessWidget {
                 style: const TextStyle(color: Colors.grey),
               ),
             const Divider(height: 32),
-            Html(data: rawBody),
+            Html(
+              data: rawBody,
+              onLinkTap: (url, attributes, element) {
+                if (url != null) {
+                  _launchUrl(url);
+                }
+              },
+              extensions: [
+                TagExtension(
+                  tagsToExtend: {"img"},
+                  builder: (extensionCtx) {
+                    final src = extensionCtx.attributes['src'];
+                    if (src != null) {
+                      return Image.network(src);
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
