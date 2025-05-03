@@ -1,97 +1,58 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:html_unescape/html_unescape.dart';
+import 'package:intl/intl.dart';
 
-class ArticleDetailPage extends StatefulWidget {
-  final Map article;
+class ArticleDetailPage extends StatelessWidget {
+  final Map articleContent;
 
-  const ArticleDetailPage({super.key, required this.article});
+  const ArticleDetailPage({super.key, required this.articleContent});
 
-  @override
-  State<ArticleDetailPage> createState() => _ArticleDetailPageState();
-}
-
-class _ArticleDetailPageState extends State<ArticleDetailPage> {
-  late final WebViewController? _controller;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Only initialize WebView on Android
-    if (Platform.isAndroid) {
-      _controller =
-          WebViewController()
-            ..setJavaScriptMode(JavaScriptMode.unrestricted)
-            ..setNavigationDelegate(
-              NavigationDelegate(
-                onPageFinished: (_) {
-                  setState(() => _isLoading = false);
-                },
-              ),
-            )
-            ..loadRequest(Uri.parse(widget.article['webUrl']));
-    } else {
-      _controller = null;
-      // Launch URL externally for non-Android platforms
-      _launchUrl(widget.article['webUrl']);
-    }
-  }
-
-  Future<void> _launchUrl(String url) async {
-    if (!Platform.isAndroid) {
-      final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        // Go back after launching URL externally
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      } else {
-        // Show error if URL can't be launched
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not open article: $url')),
-          );
-        }
-      }
+  String formatDate(String rawDate) {
+    try {
+      final parsed = DateTime.parse(rawDate).toLocal();
+      return DateFormat('MMM d, y - h:mm a').format(parsed);
+    } catch (_) {
+      return rawDate;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // For non-Android platforms, show a loading screen until the external browser is launched
-    if (!Platform.isAndroid) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "Go back",
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Opening article in browser..."),
-            ],
-          ),
-        ),
-      );
-    }
+    final fields = articleContent['fields'] ?? {};
 
-    // For Android, show the WebView
+    final title = HtmlUnescape().convert(
+      fields['headline'] ?? articleContent['webTitle'] ?? "No Title",
+    );
+
+    final rawBody = fields['body'] ?? "<p>No content available.</p>";
+    final byline = fields['byline'];
+    final date = articleContent['webPublicationDate'];
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Luna")),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller!),
-          if (_isLoading) const Center(child: CircularProgressIndicator()),
-        ],
+      appBar: AppBar(title: const Text("Go back")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            if (byline != null) ...[
+              const SizedBox(height: 8),
+              Text(byline, style: const TextStyle(fontStyle: FontStyle.italic)),
+            ],
+            const SizedBox(height: 8),
+            if (date != null)
+              Text(
+                formatDate(date),
+                style: const TextStyle(color: Colors.grey),
+              ),
+            const Divider(height: 32),
+            Html(data: rawBody),
+          ],
+        ),
       ),
     );
   }

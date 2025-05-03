@@ -1,18 +1,16 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:intl/intl.dart';
-import 'package:luna/views/article_page.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'article_page.dart';
 
 void main() => runApp(
   const MaterialApp(debugShowCheckedModeBanner: false, home: HomePage()),
 );
 
-const lunajs = "https://luna-proxy.lunajs.workers.dev/search";
+const lunajs = "https://luna-proxy.lunajs.workers.dev";
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,7 +26,6 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = false;
   String? errorMessage;
   final ScrollController _scrollController = ScrollController();
-  int currentPage = 1;
   final unescape = HtmlUnescape();
 
   final List<Map<String, dynamic>> menuItems = [
@@ -78,7 +75,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final url = Uri.parse(
-        '$lunajs?path=search&query=section=$section&page-size=20&show-fields=thumbnail',
+        '$lunajs/?path=search&query=section=$section&page-size=20&show-fields=thumbnail',
       );
       final response = await http.get(url);
 
@@ -86,7 +83,9 @@ class _HomePageState extends State<HomePage> {
         throw Exception("HTTP ${response.statusCode}: ${response.body}");
       }
 
-      final data = json.decode(utf8.decode(response.bodyBytes));
+      final decoded = utf8.decode(response.bodyBytes);
+      final data = json.decode(decoded);
+
       final newArticles = data['response']?['results'] ?? [];
 
       newArticles.sort((a, b) {
@@ -146,7 +145,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(pageTitle, style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          pageTitle,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -205,29 +207,41 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        if (Platform.isAndroid) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => ArticleDetailPage(article: article),
-                            ),
-                          );
-                        } else {
-                          final Uri url = Uri.parse(article['webUrl']);
-                          launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          ).catchError((error) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Could not open article: $error'),
+                      onTap: () async {
+                        final articleId = article['id'];
+                        final Uri contentUrl = Uri.parse(
+                          '$lunajs/?path=$articleId&query=show-fields=body,headline,byline',
+                        );
+
+                        try {
+                          final response = await http.get(contentUrl);
+
+                          if (response.statusCode == 200) {
+                            final decoded = utf8.decode(response.bodyBytes);
+                            final contentData = json.decode(decoded);
+                            final content = contentData['response']['content'];
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => ArticleDetailPage(
+                                      articleContent: content,
+                                    ),
                               ),
                             );
-                          });
+                          } else {
+                            throw Exception('Failed to load article content.');
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Could not load article: $e'),
+                            ),
+                          );
                         }
                       },
+
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         title: Text(
