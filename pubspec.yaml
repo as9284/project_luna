@@ -1,7 +1,7 @@
 name: luna
 description: "Minimalistic news app powered by The Guardian API"
 publish_to: "none"
-version: 1.2.0
+version: 1.1.2
 
 environment:
   sdk: ^3.7.2
@@ -35,5 +35,5 @@ msix_config:
   display_name: Luna
   publisher_display_name: AS
   identity_name: com.as.project-luna
-  msix_version: 1.2.0.0
+  msix_version: 1.1.2.0
   logo_path: windows/runner/resources/app_icon.ico
