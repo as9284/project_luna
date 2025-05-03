@@ -5,16 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:luna/views/home.dart';
 import 'package:luna/views/settings_page.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (Platform.isAndroid) {
-    WebViewPlatform.instance = AndroidWebViewPlatform();
-  }
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
