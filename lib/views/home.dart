@@ -240,31 +240,40 @@ class _HomePageState extends State<HomePage> {
                       );
                       final date = article['webPublicationDate'] ?? '';
 
-                      return Card(
-                        margin: const EdgeInsets.only(
-                          left: 12,
-                          right: 12,
-                          top: 4,
-                          bottom: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () async {
-                            final articleId = article['id'];
-                            _loadArticleContent(articleId);
-                          },
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            title: Text(
-                              title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                      return MouseRegion(
+                        child: Card(
+                          margin: const EdgeInsets.only(
+                            left: 12,
+                            right: 12,
+                            top: 4,
+                            bottom: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: InkWell(
+                            mouseCursor: SystemMouseCursors.click,
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () async {
+                              final articleId = article['id'];
+                              _loadArticleContent(articleId);
+                            },
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(20),
+                              title: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Text(
+                                  formatDate(date),
+                                  style: TextStyle(color: Colors.grey[500]),
+                                ),
                               ),
                             ),
-                            subtitle: Text(formatDate(date)),
                           ),
                         ),
                       );
