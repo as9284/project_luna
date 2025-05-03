@@ -275,7 +275,7 @@ class _HomePageState extends State<HomePage> {
         if (isArticleLoading)
           Positioned.fill(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 color: Colors.black45,
                 child: const Center(child: CircularProgressIndicator()),
