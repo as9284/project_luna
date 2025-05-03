@@ -1,4 +1,4 @@
-import 'dart:ui'; // Import for ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'dart:convert';
@@ -186,101 +186,103 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          pageTitle,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
-        ),
-      ),
-      drawer: NavigationDrawer(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: handleDrawerTap,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Luna',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(
+              pageTitle,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            leading: Builder(
+              builder: (context) {
+                return IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                );
+              },
             ),
           ),
-          ...menuItems.map<Widget>((item) {
-            if (item.containsKey('divider')) return const Divider();
-            return NavigationDrawerDestination(
-              icon: Icon(item['icon']),
-              label: Text(item['title']),
-            );
-          }),
-        ],
-      ),
-      body: Stack(
-        children: [
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : articles.isEmpty
-              ? const Center(child: Text("No articles found."))
-              : ListView.builder(
-                controller: _scrollController,
-                itemCount: articles.length,
-                itemBuilder: (context, index) {
-                  final article = articles[index];
-                  final title = unescape.convert(
-                    article['webTitle'] ?? "No Title",
-                  );
-                  final date = article['webPublicationDate'] ?? '';
-
-                  return Card(
-                    margin: const EdgeInsets.only(
-                      left: 12,
-                      right: 12,
-                      top: 4,
-                      bottom: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () async {
-                        final articleId = article['id'];
-                        _loadArticleContent(articleId);
-                      },
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          title,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(formatDate(date)),
-                      ),
-                    ),
-                  );
-                },
-              ),
-          if (isArticleLoading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black54,
-                child: Center(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                    child: const CircularProgressIndicator(),
-                  ),
+          drawer: NavigationDrawer(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: handleDrawerTap,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Luna',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
+              ...menuItems.map<Widget>((item) {
+                if (item.containsKey('divider')) return const Divider();
+                return NavigationDrawerDestination(
+                  icon: Icon(item['icon']),
+                  label: Text(item['title']),
+                );
+              }),
+            ],
+          ),
+          body:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : errorMessage != null
+                  ? Center(child: Text(errorMessage!))
+                  : articles.isEmpty
+                  ? const Center(child: Text("No articles found."))
+                  : ListView.builder(
+                    controller: _scrollController,
+                    itemCount: articles.length,
+                    itemBuilder: (context, index) {
+                      final article = articles[index];
+                      final title = unescape.convert(
+                        article['webTitle'] ?? "No Title",
+                      );
+                      final date = article['webPublicationDate'] ?? '';
+
+                      return Card(
+                        margin: const EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          top: 4,
+                          bottom: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () async {
+                            final articleId = article['id'];
+                            _loadArticleContent(articleId);
+                          },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            title: Text(
+                              title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(formatDate(date)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+        ),
+
+        if (isArticleLoading)
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(
+                color: Colors.black45,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
