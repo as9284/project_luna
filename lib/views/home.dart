@@ -1,3 +1,4 @@
+import 'dart:ui'; // Import for ImageFilter
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'dart:convert';
@@ -24,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   List articles = [];
   bool isLoading = false;
+  bool isArticleLoading = false;
   String? errorMessage;
   final ScrollController _scrollController = ScrollController();
   final unescape = HtmlUnescape();
@@ -141,6 +143,47 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadArticleContent(String articleId) async {
+    setState(() {
+      isArticleLoading = true;
+    });
+
+    final Uri contentUrl = Uri.parse(
+      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline',
+    );
+
+    try {
+      final response = await http.get(contentUrl);
+
+      if (response.statusCode == 200) {
+        final decoded = utf8.decode(response.bodyBytes);
+        final contentData = json.decode(decoded);
+        final content = contentData['response']['content'];
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ArticleDetailPage(articleContent: content),
+          ),
+        ).then((_) {
+          setState(() {
+            isArticleLoading = false;
+          });
+        });
+      } else {
+        throw Exception('Failed to load article content.');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not load article: $e')));
+
+      setState(() {
+        isArticleLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,7 +221,8 @@ class _HomePageState extends State<HomePage> {
           }),
         ],
       ),
-      body:
+      body: Stack(
+        children: [
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : errorMessage != null
@@ -209,39 +253,8 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(16),
                       onTap: () async {
                         final articleId = article['id'];
-                        final Uri contentUrl = Uri.parse(
-                          '$lunajs/?path=$articleId&query=show-fields=body,headline,byline',
-                        );
-
-                        try {
-                          final response = await http.get(contentUrl);
-
-                          if (response.statusCode == 200) {
-                            final decoded = utf8.decode(response.bodyBytes);
-                            final contentData = json.decode(decoded);
-                            final content = contentData['response']['content'];
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => ArticleDetailPage(
-                                      articleContent: content,
-                                    ),
-                              ),
-                            );
-                          } else {
-                            throw Exception('Failed to load article content.');
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Could not load article: $e'),
-                            ),
-                          );
-                        }
+                        _loadArticleContent(articleId);
                       },
-
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         title: Text(
@@ -254,6 +267,20 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
+          if (isArticleLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black54,
+                child: Center(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                    child: const CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
