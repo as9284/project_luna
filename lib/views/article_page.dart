@@ -3,7 +3,6 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:html/dom.dart' as dom;
 
 class ArticleDetailPage extends StatelessWidget {
   final Map articleContent;
