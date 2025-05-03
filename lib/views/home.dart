@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final url = Uri.parse(
-        '$lunajs/?path=search&query=section=$section&page-size=20&show-fields=thumbnail',
+        '$lunajs/?path=search&query=section=$section&page-size=20',
       );
       final response = await http.get(url);
 
