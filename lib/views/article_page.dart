@@ -20,10 +20,37 @@ class ArticleDetailPage extends StatelessWidget {
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      throw 'Could not launch $url';
+    try {
+      // First try with universal links / app links
+      bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        // If that fails, try with external application mode
+        launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+
+      if (!launched) {
+        debugPrint('Could not launch $url');
+        // Handle failure case
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+      // Try fallback approach for older Android versions
+      final String fallbackUrl = url;
+      if (fallbackUrl.startsWith('https://') ||
+          fallbackUrl.startsWith('http://')) {
+        try {
+          await launchUrl(
+            Uri.parse(fallbackUrl),
+            mode: LaunchMode.inAppWebView,
+          );
+        } catch (e2) {
+          debugPrint('Fallback launch also failed: $e2');
+        }
+      }
     }
   }
 
@@ -62,16 +89,22 @@ class ArticleDetailPage extends StatelessWidget {
             const Divider(height: 32),
             Html(
               data: rawBody,
-              onLinkTap: (url, attributes, element) {
+              onLinkTap: (url, _, __) async {
                 if (url != null) {
-                  _launchUrl(url);
+                  await _launchUrl(url);
                 }
+              },
+              style: {
+                "a": Style(
+                  textDecoration: TextDecoration.none,
+                  color: const Color.fromARGB(255, 75, 174, 255),
+                ),
               },
               extensions: [
                 TagExtension(
                   tagsToExtend: {"img"},
-                  builder: (extensionCtx) {
-                    final src = extensionCtx.attributes['src'];
+                  builder: (extensionContext) {
+                    final src = extensionContext.attributes['src'];
                     if (src != null) {
                       return Image.network(src);
                     }
