@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:luna/utils/misc_functions.dart';
@@ -64,9 +67,19 @@ class ArticleDetailPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () {
-              SharePlus.instance.share(
-                ShareParams(uri: Uri.parse(articleContent['webUrl'])),
-              );
+              if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+                Clipboard.setData(
+                  ClipboardData(text: articleContent['webUrl']),
+                );
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Link copied to clipboard")),
+                );
+              } else {
+                SharePlus.instance.share(
+                  ShareParams(uri: Uri.parse(articleContent['webUrl'])),
+                );
+              }
             },
           ),
         ],
