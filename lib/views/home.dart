@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-)
+
     if (shouldFetchFresh) {
       setState(() {
         isArticleLoading = true;
