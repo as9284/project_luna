@@ -230,52 +230,62 @@ class _HomePageState extends State<HomePage> {
                   ? Center(child: Text(errorMessage!))
                   : articles.isEmpty
                   ? const Center(child: Text("No articles found."))
-                  : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: articles.length,
-                    itemBuilder: (context, index) {
-                      final article = articles[index];
-                      final title = unescape.convert(
-                        article['webTitle'] ?? "No Title",
-                      );
-                      final date = article['webPublicationDate'] ?? '';
+                  : RefreshIndicator(
+                    onRefresh: () async {
+                      final section =
+                          menuItems
+                              .where((e) => !e.containsKey('divider'))
+                              .toList()[selectedIndex]['section'];
+                      await fetchArticles(section);
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: articles.length,
+                      itemBuilder: (context, index) {
+                        final article = articles[index];
+                        final title = unescape.convert(
+                          article['webTitle'] ?? "No Title",
+                        );
+                        final date = article['webPublicationDate'] ?? '';
 
-                      return MouseRegion(
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: InkWell(
-                            mouseCursor: SystemMouseCursors.click,
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () async {
-                              final articleId = article['id'];
-                              await _loadArticleContent(articleId);
-                            },
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(20),
-                              title: Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                        return MouseRegion(
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: InkWell(
+                              mouseCursor: SystemMouseCursors.click,
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () async {
+                                final articleId = article['id'];
+                                await _loadArticleContent(articleId);
+                              },
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(20),
+                                title: Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Text(
-                                  formatDate(date),
-                                  style: TextStyle(color: Colors.grey[500]),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Text(
+                                    formatDate(date),
+                                    style: TextStyle(color: Colors.grey[500]),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
         ),
         if (isArticleLoading)
