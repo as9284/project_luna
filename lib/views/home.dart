@@ -111,59 +111,70 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadArticleContent(String articleId) async {
     final prefs = await SharedPreferences.getInstance();
     final cachedContentStr = prefs.getString('article_$articleId');
+    final cachedTimestamp = prefs.getInt('article_${articleId}_timestamp');
+    final now = DateTime.now().millisecondsSinceEpoch;
 
+    final articleCacheTTL = Duration(minutes: 10).inMilliseconds;
+
+    bool shouldFetchFresh = true;
     Map? cachedContent;
-    if (cachedContentStr != null) {
-      cachedContent = jsonDecode(cachedContentStr);
-      final fields = cachedContent?['fields'] ?? {};
-      final hasThumbnail = fields['thumbnail'] != null;
 
-      if (hasThumbnail) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ArticleDetailPage(articleContent: cachedContent!),
-          ),
-        );
-        return;
+    if (cachedContentStr != null && cachedTimestamp != null) {
+      if ((now - cachedTimestamp) < articleCacheTTL) {
+        cachedContent = jsonDecode(cachedContentStr);
+        final fields = cachedContent?['fields'] ?? {};
+        final hasThumbnail = fields['thumbnail'] != null;
+
+        if (hasThumbnail) {
+          shouldFetchFresh = false;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ArticleDetailPage(articleContent: cachedContent!),
+            ),
+          );
+        }
       }
     }
-
-    setState(() {
-      isArticleLoading = true;
-    });
-
-    final Uri contentUrl = Uri.parse(
-      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline,thumbnail',
-    );
-
-    try {
-      final response = await http.get(contentUrl);
-
-      if (response.statusCode == 200) {
-        final decoded = utf8.decode(response.bodyBytes);
-        final contentData = json.decode(decoded);
-        final content = contentData['response']['content'];
-
-        await prefs.setString('article_$articleId', jsonEncode(content));
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ArticleDetailPage(articleContent: content),
-          ),
-        );
-      } else {
-        throw Exception('Failed to load article content.');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not load article: $e')));
-    } finally {
+)
+    if (shouldFetchFresh) {
       setState(() {
-        isArticleLoading = false;
+        isArticleLoading = true;
       });
+
+      final Uri contentUrl = Uri.parse(
+        '$lunajs/?path=$articleId&query=show-fields=body,headline,byline,thumbnail',
+      );
+
+      try {
+        final response = await http.get(contentUrl);
+
+        if (response.statusCode == 200) {
+          final decoded = utf8.decode(response.bodyBytes);
+          final contentData = json.decode(decoded);
+          final content = contentData['response']['content'];
+
+          await prefs.setString('article_$articleId', jsonEncode(content));
+          await prefs.setInt('article_${articleId}_timestamp', now);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ArticleDetailPage(articleContent: content),
+            ),
+          );
+        } else {
+          throw Exception('Failed to load article content.');
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not load article: $e')));
+      } finally {
+        setState(() {
+          isArticleLoading = false;
+        });
+      }
     }
   }
 
