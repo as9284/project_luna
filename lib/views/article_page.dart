@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
-import 'package:intl/intl.dart';
+import 'package:luna/utils/misc_functions.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -9,15 +9,6 @@ class ArticleDetailPage extends StatelessWidget {
   final Map articleContent;
 
   const ArticleDetailPage({super.key, required this.articleContent});
-
-  String formatDate(String rawDate) {
-    try {
-      final parsed = DateTime.parse(rawDate).toLocal();
-      return DateFormat('MMM d, y - h:mm a').format(parsed);
-    } catch (_) {
-      return rawDate;
-    }
-  }
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);

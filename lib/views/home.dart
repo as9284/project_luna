@@ -1,17 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:luna/utils/constants.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
-import 'package:intl/intl.dart';
+import 'package:luna/utils/misc_functions.dart';
 import 'article_page.dart';
 
 void main() => runApp(
   const MaterialApp(debugShowCheckedModeBanner: false, home: HomePage()),
 );
-
-const lunajs = "https://luna-proxy.lunajs.workers.dev";
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,42 +19,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String pageTitle = "World News";
-  int selectedIndex = 0;
-  List articles = [];
-  bool isLoading = false;
-  bool isArticleLoading = false;
-  String? errorMessage;
   final ScrollController _scrollController = ScrollController();
   final unescape = HtmlUnescape();
 
   final Map<String, Map> _articleCache = {};
-
-  final List<Map<String, dynamic>> menuItems = [
-    {'title': 'World News', 'icon': Symbols.globe, 'section': 'world'},
-    {'title': 'US News', 'icon': Symbols.flag_rounded, 'section': 'us-news'},
-    {
-      'title': 'Politics',
-      'icon': Symbols.podium_rounded,
-      'section': 'politics',
-    },
-    {'divider': true},
-    {'title': 'Technology', 'icon': Symbols.computer, 'section': 'technology'},
-    {'title': 'Science', 'icon': Symbols.science, 'section': 'science'},
-    {
-      'title': 'Environment',
-      'icon': Symbols.eco_rounded,
-      'section': 'environment',
-    },
-    {'title': 'Video Games', 'icon': Symbols.games, 'section': 'games'},
-    {
-      'title': 'Business',
-      'icon': Symbols.business_center,
-      'section': 'business',
-    },
-    {'divider': true},
-    {'title': 'Settings', 'icon': Symbols.settings, 'isSettings': true},
-  ];
 
   @override
   void initState() {
@@ -134,15 +100,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     fetchArticles(item['section']);
-  }
-
-  String formatDate(String rawDate) {
-    try {
-      final parsed = DateTime.parse(rawDate).toLocal();
-      return DateFormat('MMM d, y – h:mm a').format(parsed);
-    } catch (_) {
-      return rawDate;
-    }
   }
 
   Future<void> _loadArticleContent(String articleId) async {
