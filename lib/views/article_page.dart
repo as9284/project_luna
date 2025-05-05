@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:luna/utils/misc_functions.dart';
+import 'package:luna/widgets/image_viewer_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
@@ -38,7 +39,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
 
     final articleId = content['id'];
     final Uri contentUrl = Uri.parse(
-      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline',
+      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline,thumbnail',
     );
 
     try {
@@ -89,6 +90,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     );
     final rawBody = fields['body'] ?? "<p>No content available.</p>";
     final byline = fields['byline'];
+    final thumbnailUrl = fields['thumbnail'];
     final date = content['webPublicationDate'];
 
     return Scaffold(
@@ -138,11 +140,32 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                 ),
               ],
               const SizedBox(height: 8),
+
               if (date != null)
                 Text(
                   formatDate(date),
                   style: const TextStyle(color: Colors.grey),
                 ),
+
+              if (thumbnailUrl != null) ...[
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ImageViewerPage(imageUrl: thumbnailUrl),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(thumbnailUrl, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
               const Divider(height: 20),
               Html(
                 data: rawBody,

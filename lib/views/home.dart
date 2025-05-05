@@ -110,17 +110,23 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadArticleContent(String articleId) async {
     final prefs = await SharedPreferences.getInstance();
-    final cachedContent = prefs.getString('article_$articleId');
+    final cachedContentStr = prefs.getString('article_$articleId');
 
-    if (cachedContent != null) {
-      final Map content = jsonDecode(cachedContent);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ArticleDetailPage(articleContent: content),
-        ),
-      );
-      return;
+    Map? cachedContent;
+    if (cachedContentStr != null) {
+      cachedContent = jsonDecode(cachedContentStr);
+      final fields = cachedContent?['fields'] ?? {};
+      final hasThumbnail = fields['thumbnail'] != null;
+
+      if (hasThumbnail) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ArticleDetailPage(articleContent: cachedContent!),
+          ),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -128,7 +134,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     final Uri contentUrl = Uri.parse(
-      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline',
+      '$lunajs/?path=$articleId&query=show-fields=body,headline,byline,thumbnail',
     );
 
     try {
@@ -146,11 +152,7 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(
             builder: (_) => ArticleDetailPage(articleContent: content),
           ),
-        ).then((_) {
-          setState(() {
-            isArticleLoading = false;
-          });
-        });
+        );
       } else {
         throw Exception('Failed to load article content.');
       }
@@ -158,7 +160,7 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Could not load article: $e')));
-
+    } finally {
       setState(() {
         isArticleLoading = false;
       });
