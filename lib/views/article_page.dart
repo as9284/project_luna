@@ -21,24 +21,20 @@ class ArticleDetailPage extends StatelessWidget {
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     try {
-      // First try with universal links / app links
       bool launched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );
 
       if (!launched) {
-        // If that fails, try with external application mode
         launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
 
       if (!launched) {
         debugPrint('Could not launch $url');
-        // Handle failure case
       }
     } catch (e) {
       debugPrint('Error launching URL: $e');
-      // Try fallback approach for older Android versions
       final String fallbackUrl = url;
       if (fallbackUrl.startsWith('https://') ||
           fallbackUrl.startsWith('http://')) {
@@ -67,9 +63,14 @@ class ArticleDetailPage extends StatelessWidget {
     final date = articleContent['webPublicationDate'];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Go back")),
+      appBar: AppBar(
+        title: const Text(
+          "Go back",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(left: 10, right: 10),
         child: ListView(
           children: [
             Text(
