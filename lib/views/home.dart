@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:luna/utils/constants.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:luna/utils/constants.dart';
 import 'package:luna/utils/misc_functions.dart';
 import 'article_page.dart';
 
@@ -22,18 +23,43 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final unescape = HtmlUnescape();
 
-  final Map<String, Map> _articleCache = {};
+  bool isLoading = false;
+  bool isArticleLoading = false;
+  List<dynamic> articles = [];
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    fetchArticles('world');
+    _loadCachedArticles();
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _loadCachedArticles() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('cached_articles_world');
+    final cachedTime = prefs.getInt('cached_articles_world_timestamp');
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    var cacheTTL = Duration(hours: 1).inMilliseconds;
+
+    if (cachedData != null &&
+        cachedTime != null &&
+        (now - cachedTime) < cacheTTL) {
+      final List<dynamic> cachedArticles = jsonDecode(cachedData);
+      setState(() {
+        articles = cachedArticles;
+      });
+    }
+
+    await fetchArticles('world');
+  }
+
+  Future<void> _cacheArticles(String section, List<dynamic> articles) async {
+    final prefs = await SharedPreferences.getInstance();
+    final timestampKey = 'cached_articles_${section}_timestamp';
+
+    await prefs.setString('cached_articles_$section', jsonEncode(articles));
+    await prefs.setInt(timestampKey, DateTime.now().millisecondsSinceEpoch);
   }
 
   Future<void> fetchArticles(String section) async {
@@ -55,7 +81,6 @@ class _HomePageState extends State<HomePage> {
 
       final decoded = utf8.decode(response.bodyBytes);
       final data = json.decode(decoded);
-
       final newArticles = data['response']?['results'] ?? [];
 
       newArticles.sort((a, b) {
@@ -69,6 +94,8 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         articles = newArticles;
       });
+
+      await _cacheArticles(section, newArticles);
     } catch (e) {
       debugPrint("Error fetching articles: $e");
       setState(() {
@@ -81,35 +108,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void handleDrawerTap(int index) {
-    final item =
-        menuItems.where((e) => !e.containsKey('divider')).toList()[index];
-    Navigator.pop(context);
-
-    if (item['isSettings'] == true) {
-      Navigator.pushNamed(context, "/settings");
-      return;
-    }
-
-    if (selectedIndex != index) {
-      setState(() {
-        selectedIndex = index;
-        pageTitle = item['title'];
-        _scrollController.jumpTo(0);
-      });
-    }
-
-    fetchArticles(item['section']);
-  }
-
   Future<void> _loadArticleContent(String articleId) async {
-    if (_articleCache.containsKey(articleId)) {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedContent = prefs.getString('article_$articleId');
+
+    if (cachedContent != null) {
+      final Map content = jsonDecode(cachedContent);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder:
-              (_) =>
-                  ArticleDetailPage(articleContent: _articleCache[articleId]!),
+          builder: (_) => ArticleDetailPage(articleContent: content),
         ),
       );
       return;
@@ -131,7 +139,7 @@ class _HomePageState extends State<HomePage> {
         final contentData = json.decode(decoded);
         final content = contentData['response']['content'];
 
-        _articleCache[articleId] = content;
+        await prefs.setString('article_$articleId', jsonEncode(content));
 
         Navigator.push(
           context,
@@ -155,6 +163,25 @@ class _HomePageState extends State<HomePage> {
         isArticleLoading = false;
       });
     }
+  }
+
+  void handleDrawerTap(int index) {
+    final item =
+        menuItems.where((e) => !e.containsKey('divider')).toList()[index];
+    Navigator.pop(context);
+
+    if (item['isSettings'] == true) {
+      Navigator.pushNamed(context, "/settings");
+      return;
+    }
+
+    setState(() {
+      selectedIndex = index;
+      pageTitle = item['title'];
+      _scrollController.jumpTo(0);
+    });
+
+    fetchArticles(item['section']);
   }
 
   @override
@@ -215,11 +242,9 @@ class _HomePageState extends State<HomePage> {
 
                       return MouseRegion(
                         child: Card(
-                          margin: const EdgeInsets.only(
-                            left: 12,
-                            right: 12,
-                            top: 4,
-                            bottom: 8,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -229,7 +254,7 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(16),
                             onTap: () async {
                               final articleId = article['id'];
-                              _loadArticleContent(articleId);
+                              await _loadArticleContent(articleId);
                             },
                             child: ListTile(
                               contentPadding: const EdgeInsets.all(20),
