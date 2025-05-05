@@ -30,6 +30,8 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final unescape = HtmlUnescape();
 
+  final Map<String, Map> _articleCache = {};
+
   final List<Map<String, dynamic>> menuItems = [
     {'title': 'World News', 'icon': Symbols.globe, 'section': 'world'},
     {'title': 'US News', 'icon': Symbols.flag_rounded, 'section': 'us-news'},
@@ -144,6 +146,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadArticleContent(String articleId) async {
+    if (_articleCache.containsKey(articleId)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) =>
+                  ArticleDetailPage(articleContent: _articleCache[articleId]!),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       isArticleLoading = true;
     });
@@ -159,6 +173,8 @@ class _HomePageState extends State<HomePage> {
         final decoded = utf8.decode(response.bodyBytes);
         final contentData = json.decode(decoded);
         final content = contentData['response']['content'];
+
+        _articleCache[articleId] = content;
 
         Navigator.push(
           context,
@@ -280,7 +296,6 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
         ),
-
         if (isArticleLoading)
           Positioned.fill(
             child: BackdropFilter(
