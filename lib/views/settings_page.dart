@@ -63,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onPressed: () {
                     launchUrl(
                       Uri.parse(
-                        "https://github.com/as9284/project_zero/releases/latest",
+                        "https://github.com/as9284/project_luna/releases/latest",
                       ),
                     );
                     Navigator.of(context).pop();
