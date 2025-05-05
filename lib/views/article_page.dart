@@ -3,6 +3,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ArticleDetailPage extends StatelessWidget {
   final Map articleContent;
@@ -68,6 +69,17 @@ class ArticleDetailPage extends StatelessWidget {
           "Go back",
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              SharePlus.instance.share(
+                ShareParams(uri: Uri.parse(articleContent['webUrl'])),
+              );
+            },
+          ),
+        ],
+        actionsPadding: EdgeInsets.only(right: 16),
       ),
       body: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16),
